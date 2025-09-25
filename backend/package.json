@@ -1,8 +1,8 @@
 {
-  "name": "nest-typescript-starter",
+  "name": "clinic-application-backend",
   "private": true,
   "version": "1.0.0",
-  "description": "Nest TypeScript starter repository",
+  "description": "Clinic Application Backend",
   "license": "MIT",
   "scripts": {
     "build": "nest build",
@@ -24,10 +24,19 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.0.17",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.0",
+    "@nestjs/typeorm": "^11.0.0",
+    "class-validator": "^0.14.2",
+    "date-fns": "^4.1.0",
+    "meilisearch": "^0.53.0",
+    "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "typeorm": "^0.3.27"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -71,7 +80,13 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@medicines/(.*)$": "<rootDir>/medicines/$1",
+      "^@patients/(.*)$": "<rootDir>/patients/$1",
+      "^@prescriptions/(.*)$": "<rootDir>/prescriptions/$1",
+      "^@visits/(.*)$": "<rootDir>/visits/$1"
+    }
   },
   "pnpm": {
     "onlyBuiltDependencies": [
