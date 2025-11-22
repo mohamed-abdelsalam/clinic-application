@@ -12,9 +12,12 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { PrescriptionsService } from './prescriptions.service';
-import { CreatePrescriptionDto } from './dto/create-prescription.dto';
-import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
-import { PrescriptionResponseDto } from './dto/prescription-response.dto';
+import {
+  CopyToPatientRequest,
+  CreatePrescriptionDto,
+  PrescriptionDto,
+  UpdatePrescriptionDto
+} from '@clinic-application/shared';
 
 @Controller('prescriptions')
 export class PrescriptionsController {
@@ -22,7 +25,7 @@ export class PrescriptionsController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  async create(@Body() createPrescriptionDto: CreatePrescriptionDto): Promise<PrescriptionResponseDto> {
+  async create(@Body() createPrescriptionDto: CreatePrescriptionDto): Promise<PrescriptionDto> {
     try {
       return this.prescriptionsService.create(createPrescriptionDto);
     } catch (error) {
@@ -31,22 +34,33 @@ export class PrescriptionsController {
     }
   }
 
-  @Get()
+  @Get('/visit/:visitId')
   @HttpCode(HttpStatus.OK)
-  findAll(): Promise<PrescriptionResponseDto[]> {
+  async findAllByVisit(@Param('visitId') visitId: number): Promise<PrescriptionDto[]> {
     try {
-      return this.prescriptionsService.findAll();
+      return this.prescriptionsService.findAllByVisit(+visitId);
     } catch (error) {
       Logger.error(`Failed to get prescriptions: ${error}`);
       throw new HttpException(`Failed to get prescriptions: ${error}`, HttpStatus.BAD_REQUEST);
     }
   }
 
+  @Post('/:id/copy')
+  @HttpCode(HttpStatus.OK)
+  async copyToPatient(@Param('id') id: number, @Body() copyToPatientRequest: CopyToPatientRequest): Promise<PrescriptionDto> {
+    try {
+      return this.prescriptionsService.copyToPatient(+id, copyToPatientRequest.patientId);
+    } catch (error) {
+      Logger.error(`Failed to copy prescriptions: ${error}`);
+      throw new HttpException(`Failed to copy prescriptions: ${error}`, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string): Promise<PrescriptionResponseDto> {
+  async findOne(@Param('id') id: number): Promise<PrescriptionDto> {
     try {
-      return this.prescriptionsService.findOne(id);
+      return this.prescriptionsService.findOne(+id);
     } catch (error) {
       Logger.error(`Failed to get prescription: ${error}`);
       throw new HttpException(`Failed to get prescription: ${error}`, HttpStatus.BAD_REQUEST);
@@ -56,11 +70,11 @@ export class PrescriptionsController {
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updatePrescriptionDto: UpdatePrescriptionDto,
-  ): Promise<void> {
+  ): Promise<PrescriptionDto> {
     try {
-      this.prescriptionsService.update(id, updatePrescriptionDto);
+      return this.prescriptionsService.update(+id, updatePrescriptionDto);
     } catch (error) {
       Logger.error(`Failed to update prescription: ${error}`);
       throw new HttpException(`Failed to update prescription: ${error}`, HttpStatus.BAD_REQUEST);
@@ -69,9 +83,9 @@ export class PrescriptionsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param('id') id: number): Promise<void> {
     try {
-      this.prescriptionsService.remove(id);
+      this.prescriptionsService.remove(+id);
     } catch (error) {
       Logger.error(`Failed to delete prescription: ${error}`);
       throw new HttpException(`Failed to delete prescription: ${error}`, HttpStatus.BAD_REQUEST);

@@ -1,49 +1,85 @@
-import { Repository } from 'typeorm';
-
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-
-import { Visit } from '@visits/entities/visit.entity';
-
-import { CreatePrescriptionDto } from './dto/create-prescription.dto';
-import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
-import { Prescription } from './entities/prescription.entity';
-import { PrescriptionResponseDto } from './dto/prescription-response.dto';
+import { PrismaService } from '../prisma.service';
+import { Prisma } from 'generated/prisma';
+import { CreatePrescriptionDto, PrescriptionDto, UpdatePrescriptionDto } from '@clinic-application/shared';
+import { VisitsService } from '@visits/visits.service';
+import { InstructionsService } from './instructions.service';
 
 @Injectable()
 export class PrescriptionsService {
   constructor(
-    @InjectRepository(Prescription) private readonly prescriptionsRepo: Repository<Prescription>,
-    @InjectRepository(Visit) private readonly visitsRepo: Repository<Visit>,
+    private prismaService: PrismaService,
+    private visitsService: VisitsService,
+    private instructionsService: InstructionsService,
   ) {}
 
-  async create(createPrescriptionDto: CreatePrescriptionDto): Promise<PrescriptionResponseDto> {
-    const prescription = await this.prescriptionsRepo.save({
-      headerNotes: createPrescriptionDto.headerNotes,
-      footerNotes: createPrescriptionDto.footerNotes,
-      visit: await this.visitsRepo.findOneBy({ id: createPrescriptionDto.visitId }),
-      instructions: [],
+  async create(data: CreatePrescriptionDto): Promise<PrescriptionDto> {
+    const { visitId, ...rest } = data;
+
+    return await this.prismaService.prescription.create({
+      data: {
+        ...rest,
+        visit: {
+          connect: {
+            id: visitId,
+          }
+        },
+      },
+      include: { instructions: true },
     });
-
-    return PrescriptionResponseDto.fromEntity(prescription);
   }
 
-  async findAll(): Promise<PrescriptionResponseDto[]> {
-    const prescriptions = await this.prescriptionsRepo.find();
-
-    return prescriptions.map(PrescriptionResponseDto.fromEntity);
+  async findAllByVisit(visitId: number): Promise<PrescriptionDto[]> {
+    return await this.prismaService.prescription.findMany({
+      where: {
+        visitId
+      },
+      include: {
+        instructions : true,
+      }
+    });
   }
 
-  async findOne(id: string): Promise<PrescriptionResponseDto> {
-    const prescription = await this.prescriptionsRepo.findOneBy({ id });
-    return PrescriptionResponseDto.fromEntity(prescription);
+  async copyToPatient(prescriptionId: number, patientId: number): Promise<PrescriptionDto> {
+    const visit = await this.visitsService.findLastByPatient(patientId);
+    const prescription = await this.findOne(prescriptionId);
+
+    const newPrescription = await this.create({
+      headerNotes: prescription.headerNotes,
+      visitId: visit.id,
+      footerNotes: prescription.footerNotes,
+    });
+    await Promise.all(prescription.instructions.map(async (instruction) => {
+      return await this.instructionsService.create({
+        description: instruction.description,
+        medicineId: instruction.medicineId,
+        prescriptionId: newPrescription.id,
+        strengthValue: instruction.strengthValue,
+        group: instruction.group,
+      });
+    }));
+
+    return newPrescription;
   }
 
-  async update(id: string, updatePrescriptionDto: UpdatePrescriptionDto): Promise<void> {
-    await this.prescriptionsRepo.update({ id }, updatePrescriptionDto);
+  async findOne(id: number): Promise<PrescriptionDto> {
+    return await this.prismaService.prescription.findUnique({
+      where: { id },
+      include: { instructions: true, },
+    });
   }
 
-  async remove(id: string): Promise<void> {
-    await this.prescriptionsRepo.delete({ id });
+  async update(id: number, data: UpdatePrescriptionDto): Promise<PrescriptionDto> {
+    return await this.prismaService.prescription.update({
+      where: { id },
+      data,
+      include: { instructions: true },
+    });
+  }
+
+  async remove(id: number): Promise<void> {
+    await this.prismaService.prescription.delete({
+      where: { id },
+    });
   }
 }

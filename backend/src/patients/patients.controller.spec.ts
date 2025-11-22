@@ -1,9 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PatientsController } from './patients.controller';
 import { PatientsService } from './patients.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Patient } from './entities/patient.entity';
-import { CreatePatientDto } from './dto/create-patient.dto';
+import { PrismaService } from '../prisma.service';
+import { CreatePatientDto } from '@clinic-application/shared';
 
 describe('PatientsController', () => {
   let controller: PatientsController;
@@ -14,12 +13,14 @@ describe('PatientsController', () => {
       controllers: [PatientsController],
       providers: [
         {
-          provide: getRepositoryToken(Patient),
+          provide: PrismaService,
           useValue: {
-            save: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-            findOneBy: jest.fn(),
+            patient : {
+              create: jest.fn(),
+              findUnique: jest.fn(),
+              update: jest.fn(),
+              delete: jest.fn(),
+            }
           },
         },
         PatientsService
@@ -43,14 +44,20 @@ describe('PatientsController', () => {
         email: 'email@domain.com',
         dateOfBirth: '1923-09-01',
         job: 'None',
+        registeredAt: new Date(2024, 2, 10),
       };
       const responseSpy = jest.spyOn(patientsService, 'create')
-        .mockReturnValue(Promise.resolve({
-          id: '3',
-          registeredAt: new Date("1996-12-17T03:24:00"),
-          ...createPatientDto
-        }
-      ));
+        .mockResolvedValue({
+          id: 1,
+          name: 'patient-1',
+          dateOfBirth: '1995-10-20',
+          email: 'patient@example.com',
+          gender: 'Male',
+          job: 'Engineer',
+          phone: '012',
+          registeredAt: new Date(2024, 2, 10),
+          updatedAt: new Date(),
+        });
       const patient = await controller.create(createPatientDto);
 
       expect(responseSpy).toHaveBeenCalledWith(createPatientDto);
@@ -67,6 +74,7 @@ describe('PatientsController', () => {
         email: 'email@domain.com',
         dateOfBirth: '1923-09-01',
         job: 'None',
+        registeredAt: new Date(2024, 2, 10),
       };
       const responseSpy = jest.spyOn(patientsService, 'create').mockImplementation(() => {
         throw new Error('error');

@@ -1,60 +1,47 @@
-import { Repository } from 'typeorm';
-
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-
-import { CreatePatientDto } from './dto/create-patient.dto';
-import { UpdatePatientDto } from './dto/update-patient.dto';
-import { Patient } from './entities/patient.entity';
-import { PatientResponseDto } from './dto/patient-response.dto';
+import { PrismaService } from '../prisma.service';
+import { CreatePatientDto, PatientDto, UpdatePatientDto } from '@clinic-application/shared';
+import { JobService } from '../job/job.service';
+import { Prisma } from '../../generated/prisma';
 
 @Injectable()
 export class PatientsService {
-  constructor(@InjectRepository(Patient) private patientsRepo: Repository<Patient>) {}
+  constructor(private prismaService: PrismaService, private jobService: JobService) {}
 
-  async create(createPatientDto: CreatePatientDto): Promise<PatientResponseDto> {
-    const patient = await this.patientsRepo.save({ 
-      ...createPatientDto,
-      visits: [],
-    });
-
-    return PatientResponseDto.fromEntity(patient);
+  async create(data: CreatePatientDto): Promise<PatientDto> {
+    const patientDto = await this.prismaService.patient.create({ data });
+    this.jobService.queuePatientIndex(patientDto);
+    return patientDto;
   }
 
-  async findAll(): Promise<PatientResponseDto[]> {
-    const patients = await this.patientsRepo.find({ 
-      relations: { 
-        visits: { 
-          prescriptions: { 
-            instructions: true
-          }
-        }
+  async find(): Promise<PatientDto[]> {
+    const patients = await this.prismaService.patient.findMany({
+      orderBy: { updatedAt: Prisma.SortOrder.desc},
+      take: 20,
+    });
+
+    return patients;
+  }
+
+  async findOne(id: number): Promise<PatientDto> {
+    return await this.prismaService.patient.findUnique({
+      where: { id },
+      include: {
+        visits: true,
       }
     });
-    
-    return patients.map(PatientResponseDto.fromEntity);
   }
 
-  async findOne(id: string): Promise<PatientResponseDto> {
-    const patient =  await this.patientsRepo.findOne({
+  async update(id: number, data: UpdatePatientDto): Promise<PatientDto> {
+    return await this.prismaService.patient.update({
       where: { id },
-      relations: {
-        visits: {
-          prescriptions: {
-            instructions: true
-          }
-        }
-      },
+      data,
     });
-
-    return PatientResponseDto.fromEntity(patient);
   }
 
-  async update(id: string, updatePatientDto: UpdatePatientDto): Promise<void> {
-    this.patientsRepo.update(id, updatePatientDto);
-  }
-
-  async remove(id: string): Promise<void> {
-    this.patientsRepo.delete({ id });
+  async remove(id: number): Promise<void> {
+    await this.prismaService.patient.delete({
+      where: { id },
+    });
   }
 }

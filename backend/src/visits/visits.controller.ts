@@ -13,9 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { VisitsService } from './visits.service';
-import { CreateVisitDto } from './dto/create-visit.dto';
-import { UpdateVisitDto } from './dto/update-visit.dto';
-import { VisitResponseDto } from './dto/visit-response.dto';
+import { CreateVisitDto, UpdateVisitDto, VisitDto } from '@clinic-application/shared';
 
 @ApiTags('visits')
 @Controller('visits')
@@ -26,7 +24,7 @@ export class VisitsController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'create visit successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to create visit' })
-  async create(@Body() createVisitDto: CreateVisitDto): Promise<VisitResponseDto> {
+  async create(@Body() createVisitDto: CreateVisitDto): Promise<VisitDto> {
     try {
       return await this.visitsService.create(createVisitDto);
     } catch (error) {
@@ -39,9 +37,9 @@ export class VisitsController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'get visits successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to get visits' })
-  async findAllByPatient(@Param('patientId') patientId: string) {
+  async findAllByPatient(@Param('patientId') patientId: number) {
     try {
-      return await this.visitsService.findAllByPatient(patientId);
+      return await this.visitsService.findAllByPatient(+patientId);
     } catch (error) {
       Logger.error(`Faild to get visits: ${error}`);
       throw new HttpException(`Faild to get visits: ${error}`, HttpStatus.BAD_REQUEST);
@@ -52,9 +50,9 @@ export class VisitsController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'get visit successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to get visit' })
-  async findOne(@Param('id') id: string): Promise<VisitResponseDto> {
+  async findOne(@Param('id') id: number): Promise<VisitDto> {
     try {
-      return await this.visitsService.findOne(id);
+      return await this.visitsService.findOne(+id);
     } catch (error) {
       Logger.error(`Faild to get visit: ${error}`);
       throw new HttpException(`Faild to get visit: ${error}`, HttpStatus.BAD_REQUEST);
@@ -65,9 +63,9 @@ export class VisitsController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'update visit successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to update visit' })
-  async update(@Param('id') id: string, @Body() updateVisitDto: UpdateVisitDto): Promise<void> {
+  async update(@Param('id') id: number, @Body() updateVisitDto: UpdateVisitDto): Promise<VisitDto> {
     try {
-      await this.visitsService.update(id, updateVisitDto);
+      return await this.visitsService.update(+id, updateVisitDto);
     } catch (error) {
       Logger.error(`Faild to update visit: ${error}`);
       throw new HttpException(`Faild to update visit: ${error}`, HttpStatus.BAD_REQUEST);
@@ -78,9 +76,9 @@ export class VisitsController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'delete visit successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to delete visit' })
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param('id') id: number): Promise<void> {
     try {
-      await this.visitsService.remove(id);
+      await this.visitsService.remove(+id);
     } catch (error) {
       Logger.error(`Faild to delete visit: ${error}`);
       throw new HttpException(`Faild to delete visit: ${error}`, HttpStatus.BAD_REQUEST);

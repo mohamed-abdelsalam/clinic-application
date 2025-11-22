@@ -1,38 +1,36 @@
-import { Repository } from 'typeorm';
-
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-
-import { CreateMedicineDto } from './dto/create-medicine.dto';
-import { UpdateMedicineDto } from './dto/update-medicine.dto';
-import { Medicine } from './entities/medicine.entity';
-import { MedicineResponseDto } from './dto/medicine-response.dto';
+import { Prisma } from 'generated/prisma';
+import { MedicineDto, UpdateMedicineDto } from '@clinic-application/shared';
+import { JobService } from '../job/job.service';
+import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class MedicinesService {
-  constructor(@InjectRepository(Medicine) private medicineRepo: Repository<Medicine>) {}
+  constructor(private prisma: PrismaService, private jobService: JobService) {}
 
-  async create(createMedicineDto: CreateMedicineDto): Promise<MedicineResponseDto> {
-    const medicine = await this.medicineRepo.save(createMedicineDto);
-    return MedicineResponseDto.fromEntity(medicine);
+  async create(data: Prisma.MedicineCreateInput): Promise<MedicineDto> {
+    const newMedicine: MedicineDto = await this.prisma.medicine.create({ data });
+    await this.jobService.queueMedicineIndex(newMedicine);
+
+    return newMedicine;
   }
 
-  async findAll(): Promise<MedicineResponseDto[]> {
-    const medicines = await this.medicineRepo.find();
-
-    return medicines.map(MedicineResponseDto.fromEntity);
+  async findOne(id: number): Promise<MedicineDto> {
+    return await this.prisma.medicine.findUnique({
+      where: { id },
+    });
   }
 
-  async findOne(id: string): Promise<Medicine> {
-    const medicine = await this.medicineRepo.findOneBy({ id });
-    return MedicineResponseDto.fromEntity(medicine);
+  async update(id: number, data: UpdateMedicineDto): Promise<MedicineDto> {
+    return await this.prisma.medicine.update({
+      where: { id },
+      data,
+    });
   }
 
-  async update(id: string, updateMedicineDto: UpdateMedicineDto): Promise<void> {
-    this.medicineRepo.update({ id }, updateMedicineDto);
-  }
-
-  async remove(id: string): Promise<void> {
-    this.medicineRepo.delete(id);
+  async remove(id: number): Promise<void> {
+    this.prisma.medicine.delete({
+      where: { id },
+    });
   }
 }

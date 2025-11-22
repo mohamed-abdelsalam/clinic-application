@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int @id @default(autoincrement())
+  email         String @unique
+  name          String
+  password      String
+  role          Role
+}
+
+model Clinic {
+  id            Int @id @default(autoincrement())
+  name          String
+  address       String
+  city          String
+  visits        Visit[]
+}
+
+model Patient {
+  id            Int @id @default(autoincrement())
+  name          String
+  gender        Gender?
+  phone         String?
+  job           String?
+  dateOfBirth   String?
+  registeredAt  DateTime @default(now())
+  email         String?
+  updatedAt     DateTime @updatedAt
+  visits        Visit[]
+}
+
+model Visit {
+  id            Int @id @default(autoincrement())
+  patientId     Int
+  patient       Patient @relation(fields: [patientId], references: [id])
+  date          String
+  createdAt     DateTime @default(now())
+  branch        String
+  type          VisitType
+  prescriptions Prescription[]
+  updatedAt     DateTime @updatedAt
+  clinicId      Int
+  clinic        Clinic @relation(fields: [clinicId], references: [id])
+}
+
+model Prescription {
+  id            Int @id @default(autoincrement())
+  visitId       Int
+  visit         Visit @relation(fields: [visitId], references: [id])
+  headerNotes   String[]
+  instructions  Instruction[]
+  footerNotes   String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Medicine {
+  id                  Int @id @default(autoincrement())
+  name                String
+  activeSubstances    String[]
+  strengthUnit        String
+  strengthValues      String[]
+  dosageInstructions  String[]
+  maxDailyDose        Int
+  sideEffects         String[]
+  indications         String[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Instruction {
+  id              Int @id @default(autoincrement())
+  prescriptionId  Int
+  prescription    Prescription @relation(fields: [prescriptionId], references: [id])
+  medicineId      Int
+  strengthValue  String
+  description     String
+  group           Int?
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+enum VisitType {
+  Examination
+  Consultation
+}
+
+enum Role {
+  Owner
+  Admin
+  Receptionist
+}

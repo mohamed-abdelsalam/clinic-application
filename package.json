@@ -1,0 +1,22 @@
+{
+  "name": "clinic-application",
+  "version": "1.0.0",
+  "description": "Clinic Application",
+  "private": true,
+  "license": "MIT",
+  "main": "electron/main.js",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ],
+  "scripts": {
+    "dev:electron": "electron electron/main.js"
+  },
+  "devDependencies": {
+    "electron": "^38.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {}
+}

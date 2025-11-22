@@ -15,4 +15,10 @@ services:
     volumes:
       - ./database:/var/lib/postgresql/data
 
-
+  meilisearch:
+    container_name: clinic-meilisearch
+    image: getmeili/meilisearch:v1.23.0
+    ports:
+      - 7700:7700
+    volumes:
+      - ./meili_data:/meili_data

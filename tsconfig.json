@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@clinic-application": [ "shared/src" ]
+    }
+  }
+}

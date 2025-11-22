@@ -5,40 +5,33 @@ import { PrescriptionsModule } from './prescriptions/prescriptions.module';
 import { PatientsModule } from './patients/patients.module';
 import { MedicinesModule } from './medicines/medicines.module';
 import { VisitsModule } from './visits/visits.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-
-import { Patient } from '@patients/entities/patient.entity';
-import { Medicine } from '@medicines/entities/medicine.entity';
-import { Visit } from '@visits/entities/visit.entity';
-import { Instruction } from '@prescriptions/entities/instruction.entity';
-import { Prescription } from '@prescriptions/entities/prescription.entity';
+import { ConfigModule } from '@nestjs/config';
+import { PrismaModule } from './prisma.module';
+import { SearchModule } from './search/search.module';
+import { JobService } from './job/job.service';
+import { JobModule } from './job/job.module';
+import { UserModule } from './user/user.module';
+import { ClinicModule } from './clinic/clinic.module';
+import { AuthService } from './auth/auth.service';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    PrismaModule,
     PrescriptionsModule,
     PatientsModule,
     MedicinesModule,
     VisitsModule,
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        entities: [Patient, Medicine, Visit, Instruction, Prescription],
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_NAME'),
-        username: configService.get<string>('DB_USER'),
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        synchronize: true,
-      }),
-    }),
+    SearchModule,
+    JobModule,
+    UserModule,
+    ClinicModule,
+    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, JobService, AuthService],
 })
 export class AppModule {}

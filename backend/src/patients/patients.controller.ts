@@ -12,11 +12,8 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-
 import { PatientsService } from './patients.service';
-import { CreatePatientDto } from './dto/create-patient.dto';
-import { UpdatePatientDto } from './dto/update-patient.dto';
-import { PatientResponseDto } from './dto/patient-response.dto';
+import { CreatePatientDto, PatientDto, UpdatePatientDto } from '@clinic-application/shared';
 
 @ApiTags('patients')
 @Controller('patients')
@@ -27,7 +24,7 @@ export class PatientsController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'create patient successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to create patient' })
-  async create(@Body() createPatientDto: CreatePatientDto): Promise<PatientResponseDto> {
+  async create(@Body() createPatientDto: CreatePatientDto): Promise<PatientDto> {
     try {
       return this.patientsService.create(createPatientDto);
     } catch (error) {
@@ -41,15 +38,15 @@ export class PatientsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiResponse({ status: HttpStatus.OK, description: 'get patients successfully' })
-  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to get patients' })
-  async findAll(): Promise<PatientResponseDto[]> {
+  @ApiResponse({ status: HttpStatus.OK, description: 'find patients successfully' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to find patients' })
+  async find(): Promise<PatientDto[]> {
     try {
-      return this.patientsService.findAll();
+      return await this.patientsService.find();
     } catch (error) {
-      Logger.error(`Failed to get all patients with error: ${error}`);
+      Logger.error(`Failed to get patients with error: ${error}`);
       throw new HttpException(
-        `Failed to get all patients with error: ${error}`,
+        `Failed to get patients with error: ${error}`,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -59,9 +56,9 @@ export class PatientsController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'find patient successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to find patient' })
-  async findOne(@Param('id') id: string): Promise<PatientResponseDto> {
+  async findOne(@Param('id') id: number): Promise<PatientDto> {
     try {
-      return await this.patientsService.findOne(id);
+      return await this.patientsService.findOne(+id);
     } catch (error) {
       Logger.error(`Failed to get patient with error: ${error}`);
       throw new HttpException(
@@ -73,12 +70,11 @@ export class PatientsController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  
   @ApiResponse({ status: HttpStatus.OK, description: 'update patient successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to update patient' })
-  async update(@Param('id') id: string, @Body() updatePatientDto: UpdatePatientDto): Promise<void> {
+  async update(@Param('id') id: number, @Body() updatePatientDto: UpdatePatientDto): Promise<PatientDto> {
     try {
-      await this.patientsService.update(id, updatePatientDto);
+      return await this.patientsService.update(+id, updatePatientDto);
     } catch (error) {
       Logger.error(`Failed to update patient with error: ${error}`);
       throw new HttpException(
@@ -92,9 +88,9 @@ export class PatientsController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'delete patient successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to delete patient' })
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param('id') id: number): Promise<void> {
     try {
-      await this.patientsService.remove(id);
+      await this.patientsService.remove(+id);
     } catch (error) {
       Logger.error(`Failed to delete patient with error: ${error}`);
       throw new HttpException(

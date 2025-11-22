@@ -1,27 +1,31 @@
-import { Repository } from 'typeorm';
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { MedicinesService } from './medicines.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Medicine } from './entities/medicine.entity';
+import { PrismaService } from '../prisma.service';
 
 describe('MedicinesService', () => {
   let service: MedicinesService;
-  let medicineRepo: Repository<Medicine>
+  let prismaService: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: getRepositoryToken(Medicine),
-          useValue: {},
+          provide: PrismaService,
+          useValue: {
+            medicine : {
+              create: jest.fn(),
+              findUnique: jest.fn(),
+              update: jest.fn(),
+              delete: jest.fn(),
+            }
+          },
         },
         MedicinesService,
       ],
     }).compile();
 
     service = module.get<MedicinesService>(MedicinesService);
-    medicineRepo = module.get<Repository<Medicine>>(getRepositoryToken(Medicine));
+    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {

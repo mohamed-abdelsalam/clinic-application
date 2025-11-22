@@ -13,10 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MedicinesService } from './medicines.service';
-import { CreateMedicineDto } from './dto/create-medicine.dto';
-import { UpdateMedicineDto } from './dto/update-medicine.dto';
-import { MedicineResponseDto } from './dto/medicine-response.dto';
-
+import { CreateMedicineDto, MedicineDto, UpdateMedicineDto } from '@clinic-application/shared';
 
 @ApiTags('medicines')
 @Controller('medicines')
@@ -27,7 +24,7 @@ export class MedicinesController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'create medicine successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to create medicine' })
-  async create(@Body() createMedicineDto: CreateMedicineDto): Promise<MedicineResponseDto> {
+  async create(@Body() createMedicineDto: CreateMedicineDto): Promise<MedicineDto> {
     try {
       return this.medicinesService.create(createMedicineDto);
     } catch (error) {
@@ -36,26 +33,13 @@ export class MedicinesController {
     }
   }
 
-  @Get()
-  @HttpCode(HttpStatus.OK)
-  @ApiResponse({ status: HttpStatus.OK, description: 'get medicines successfully' })
-  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to get medicines' })
-  async findAll(): Promise<MedicineResponseDto[]> {
-    try {
-      return this.medicinesService.findAll();
-    } catch (error) {
-      Logger.error(`Failed to get medicines: ${error}`);
-      throw new HttpException(`Failed to get medicines: ${error}`, HttpStatus.BAD_REQUEST);
-    }
-  }
-
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'get medicine successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to get medicine' })
-  async findOne(@Param('id') id: string): Promise<MedicineResponseDto> {
+  async findOne(@Param('id') id: number): Promise<MedicineDto> {
     try {
-      return this.medicinesService.findOne(id);
+      return this.medicinesService.findOne(+id);
     } catch (error) {
       Logger.error(`Failed to get medicine: ${error}`);
       throw new HttpException(`Failed to get medicine: ${error}`, HttpStatus.BAD_REQUEST);
@@ -67,11 +51,11 @@ export class MedicinesController {
   @ApiResponse({ status: HttpStatus.OK, description: 'update medicine successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'unable to update medicine' })
   async update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateMedicineDto: UpdateMedicineDto,
-  ): Promise<void> {
+  ): Promise<MedicineDto> {
     try {
-      return this.medicinesService.update(id, updateMedicineDto);
+      return this.medicinesService.update(+id, updateMedicineDto);
     } catch (error) {
       Logger.error(`Failed to update medicine: ${error}`);
       throw new HttpException(`Failed to update medicine: ${error}`, HttpStatus.BAD_REQUEST);
@@ -82,9 +66,9 @@ export class MedicinesController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, description: 'delete medicine successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'delete to update medicine' })
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param('id') id: number): Promise<void> {
     try {
-      return this.medicinesService.remove(id);
+      return this.medicinesService.remove(+id);
     } catch (error) {
       Logger.error(`Failed to delete medicine: ${error}`);
       throw new HttpException(`Failed to delete medicine: ${error}`, HttpStatus.BAD_REQUEST);
